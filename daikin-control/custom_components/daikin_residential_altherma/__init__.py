@@ -42,27 +42,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def init_tokenset(hass, email, password):
-    """:returns tuple of (success: bool, errortext: str | tokenset: Dict) """
-    try:
-        daikin_api = DaikinApi(hass, None)
-    except Exception as e:
-        _LOGGER.error("Failed to initialize DaikinApi: %s", e)
-        return False, "init_failed"
-    try:
-        await daikin_api.retrieveAccessToken(email, password)
-    except Exception as e:
-        _LOGGER.error("Failed to retrieve Access Token: %s", e)
-        return False, "token_retrieval_failed"
-    try:
-        await daikin_api.getApiInfo()
-    except Exception as e:
-        _LOGGER.error("Failed to connect to DaikinApi: %s", e)
-        return False, "cannot_connect"
-
-    return True, daikin_api.tokenSet
-
-
 async def async_setup(hass, config):    # : ConfigType
     """Setup the Daikin Residential component.
     called by HA setup.py  _async_setup_component() automatically"""

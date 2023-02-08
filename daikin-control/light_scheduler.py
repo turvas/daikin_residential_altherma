@@ -12,7 +12,7 @@ _R = TypeVar("_R")
 
 class PathHelper:
     """simulate Config for HomeScheduler"""
-    def __init__(self)-> None:
+    def __init__(self) -> None:
         ...
 
     def path(self, filename: str):
@@ -60,4 +60,3 @@ class HomeScheduler:
 
 
 _cv_hass: ContextVar[HomeScheduler] = ContextVar("current_entry")
-

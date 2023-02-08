@@ -50,7 +50,7 @@ class ConfigEntry:
         self,
         hass,
         *,
-        integration = None,
+        integration=None,
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
@@ -76,7 +76,7 @@ class ConfigEntries:
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
         if entry.entry_id in self._entries:
-            raise Exception( f"An entry with the id {entry.entry_id} already exists.")
+            raise Exception(f"An entry with the id {entry.entry_id} already exists.")
         self._entries[entry.entry_id] = entry
 
     @callback
@@ -109,11 +109,3 @@ class ConfigEntries:
     ) -> bool:
         """Update a config entry."""
         return True
-
-    async def async_forward_entry_setup(
-        self, entry: ConfigEntry, domain: str
-    ) -> bool:
-        """Forward the setup of an entry to a different component."""
-
-        return True
-

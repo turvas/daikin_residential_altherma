@@ -1,6 +1,7 @@
 # old minimal test, without HA
 from uuid import uuid4
 import asyncio
+import logging
 from const import CONF_EMAIL, CONF_PASSWORD
 import light_scheduler
 import light_config
@@ -8,11 +9,12 @@ from light_config import ConfigEntry
 from custom_components.daikin_residential_altherma import async_setup_entry, DaikinApi  # , async_setup
 from custom_components.daikin_residential_altherma.const import DOMAIN, CONF_TOKENSET
 
+_LOGGER = logging.getLogger(__name__)
 username = "turvas@gmail.com"
 password = "tulin2Dai"
 
 
-async def init_tokenset(hass, email, password):
+async def init_tokenset(hass, email, _password):
     """:returns tuple of (success: bool, errortext: str | tokenset: Dict) """
     try:
         daikin_api = DaikinApi(hass, None)
@@ -20,7 +22,7 @@ async def init_tokenset(hass, email, password):
         _LOGGER.error("Failed to initialize DaikinApi: %s", e)
         return False, "init_failed"
     try:
-        await daikin_api.retrieveAccessToken(email, password)
+        await daikin_api.retrieveAccessToken(email, _password)
     except Exception as e:
         _LOGGER.error("Failed to retrieve Access Token: %s", e)
         return False, "token_retrieval_failed"
@@ -55,4 +57,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

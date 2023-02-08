@@ -67,7 +67,7 @@ class DaikinApi:
         headers = {
             "user-agent": "Daikin/1.6.1.4681 CFNetwork/1209 Darwin/20.2.0",
             "x-api-key": "xw6gvOtBHq5b1pyceadRp6rujSNSZdjx2AqT03iC",
-            "Authorization": "Bearer " + self.tokenSet["access_token"],
+            "Authorization": "Bearer " + self.tokenSet.get("access_token"),
             "Content-Type": "application/json",
         }
 
@@ -104,7 +104,7 @@ class DaikinApi:
         raise Exception("Communication failed! Status: " + str(res.status_code))
 
     async def refreshAccessToken(self):
-        """Attempt to refresh the Access Token."""
+        """Attempt to refresh the Access Token, not first time."""
         url = "https://cognito-idp.eu-west-1.amazonaws.com"
 
         headers = {
@@ -163,7 +163,7 @@ class DaikinApi:
             )
         except Exception:
             raise Exception(
-                "Token refresh was not successful! Status: " + str(res.status_code)
+                f"Token refresh was not successful! Status: {res.status_code}, {res.content}"
             )
 
     async def _doAuthorizationRequest(self):

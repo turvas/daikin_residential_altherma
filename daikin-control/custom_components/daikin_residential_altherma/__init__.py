@@ -4,12 +4,11 @@ import datetime
 import logging
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, SERVICE_RELOAD
-from homeassistant.helpers.typing import HomeAssistantType
+from light_config import ConfigEntry, SOURCE_IMPORT
+from light_scheduler import HomeScheduler
 
 from .const import DOMAIN, DAIKIN_API, DAIKIN_DEVICES, CONF_TOKENSET
-
 from .daikin_api import DaikinApi
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +42,30 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
-    """Setup the Daikin Residential component."""
+async def init_tokenset(hass, email, password):
+    """:returns tuple of (success: bool, errortext: str | tokenset: Dict) """
+    try:
+        daikin_api = DaikinApi(hass, None)
+    except Exception as e:
+        _LOGGER.error("Failed to initialize DaikinApi: %s", e)
+        return False, "init_failed"
+    try:
+        await daikin_api.retrieveAccessToken(email, password)
+    except Exception as e:
+        _LOGGER.error("Failed to retrieve Access Token: %s", e)
+        return False, "token_retrieval_failed"
+    try:
+        await daikin_api.getApiInfo()
+    except Exception as e:
+        _LOGGER.error("Failed to connect to DaikinApi: %s", e)
+        return False, "cannot_connect"
+
+    return True, daikin_api.tokenSet
+
+
+async def async_setup(hass, config):    # : ConfigType
+    """Setup the Daikin Residential component.
+    called by HA setup.py  _async_setup_component() automatically"""
 
     async def _handle_reload(service):
         """Handle reload service call."""
@@ -74,12 +95,12 @@ async def async_setup(hass, config):
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
             )
         )
-
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Establish connection with Daikin."""
+async def async_setup_entry(hass: HomeScheduler, entry: ConfigEntry):
+    """Establish connection with Daikin,
+    called by ConfigEntry async_setup()"""
 
     daikin_api = DaikinApi(hass, entry)
     await daikin_api.getCloudDeviceDetails()

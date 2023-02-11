@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeScheduler, entry: ConfigEntry):
     called by ConfigEntry async_setup()"""
 
     daikin_api = DaikinApi(hass, entry)
-    await daikin_api.getCloudDeviceDetails()
+    await daikin_api.getCloudDeviceDetails()    # toob detailsed staatused
 
     devices = await daikin_api.getCloudDevices()
     hass.data[DOMAIN] = {DAIKIN_API: daikin_api, DAIKIN_DEVICES: devices}

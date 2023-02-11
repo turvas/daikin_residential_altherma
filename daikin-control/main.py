@@ -8,14 +8,16 @@ from const import CONF_EMAIL, CONF_PASSWORD
 import light_scheduler
 import light_config
 from light_config import ConfigEntry
-from custom_components.daikin_residential_altherma import async_setup_entry, DaikinApi  # , async_setup
-from custom_components.daikin_residential_altherma.const import DOMAIN, CONF_TOKENSET
+from custom_components.daikin_residential_altherma import async_setup_entry, DaikinApi
+from custom_components.daikin_residential_altherma.switch import DaikinSwitch
+from custom_components.daikin_residential_altherma.const import DOMAIN, DAIKIN_DEVICES, CONF_TOKENSET, DAIKIN_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 username = "turvas@gmail.com"
 password = "tulin2Dai"
 
 tokenfile = "tokens.json"
+gl_switches = {}
 
 async def init_tokenset(hass, email, _password):
     """:returns tuple of (success: bool, errortext: str | tokenset: Dict) """
@@ -65,7 +67,40 @@ def print_status(daikin_data: dict):
     if daikin_data:
         devices = daikin_data.get('daikin_devices')
         for _, dev in devices.items():     # iterate Appliances
-            print(f"{dev.desc['timestamp']}: leaving water: {dev.leaving_water_temperature}C, tank temp: {dev.tank_temperature}C, tank heating: {dev.tank_is_in_warning_state}")
+            print(f"{dev.desc['timestamp']}: leaving water: {dev.leaving_water_temperature}C, "
+                  f"tank temp: {dev.tank_temperature}C")
+
+def set_heating_temp():
+    ...
+    # args = {'entity_id': ['climate.altherma'], 'temperature': 6.0}
+    # climate.DaikinClimate.async_set_temperature(args)
+
+
+async def setup_switches(hass):
+    """Set up Daikin tank based on config_entry."""
+    global gl_switches
+    for dev_id, device in hass.data[DOMAIN][DAIKIN_DEVICES].items():
+        switches = DAIKIN_SWITCHES
+
+        for switch in switches:
+            if device.support_preset_mode(switch):
+                _LOGGER.info("DAMIANO Adding Switch {}".format(switch))
+                gl_switches[switch] = DaikinSwitch(device, switch)
+
+
+async def set_tank_state(on=True):
+
+    # _switch_id = Tank,
+    # switch.DaikinSwitch.async_turn_off(args)
+    # or dis@immigration.go.ke
+    # Appliance.control_mode: 'leavingWaterTemperature'
+    # Appliance.set_preset_mode_status('onOffMode', 'off')
+    sw = gl_switches.get('Tank')
+    if sw:  # DaikinSwitch
+        if on:
+            await sw.async_turn_on()
+        else:
+            await sw.async_turn_off()
 
 
 async def main_task():
@@ -85,6 +120,8 @@ async def main_task():
     await hass.config_entries.async_add(entry)
     await async_setup_entry(hass, entry)
     daikin_data = hass.data[DOMAIN]
+    await setup_switches(hass)
+    await set_tank_state(True)
     print_status(daikin_data)
     return 0
 

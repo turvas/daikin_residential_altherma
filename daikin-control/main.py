@@ -10,6 +10,7 @@ import light_config
 from light_config import ConfigEntry
 from custom_components.daikin_residential_altherma import async_setup_entry, DaikinApi
 from custom_components.daikin_residential_altherma.switch import DaikinSwitch
+from custom_components.daikin_residential_altherma.climate import DaikinClimate
 from custom_components.daikin_residential_altherma.const import DOMAIN, DAIKIN_DEVICES, CONF_TOKENSET, DAIKIN_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,10 +71,17 @@ def print_status(daikin_data: dict):
             print(f"{dev.desc['timestamp']}: leaving water: {dev.leaving_water_temperature}C, "
                   f"tank temp: {dev.tank_temperature}C")
 
-def set_heating_temp():
-    ...
-    # args = {'entity_id': ['climate.altherma'], 'temperature': 6.0}
-    # climate.DaikinClimate.async_set_temperature(args)
+async def setup_climate(hass):
+    """Set up Daikin climate based on config_entry."""
+    for dev_id, device in hass.data[DOMAIN][DAIKIN_DEVICES].items():
+        climate = DaikinClimate(device)
+    return climate
+
+
+async def set_heating_temp_shift(climate: DaikinClimate, temp: float):
+    """:param temp - shift from normal"""
+    args = {'temperature': temp}
+    return await climate.async_set_temperature(**args)
 
 
 async def setup_switches(hass):
@@ -89,12 +97,7 @@ async def setup_switches(hass):
 
 
 async def set_tank_state(on=True):
-
-    # _switch_id = Tank,
-    # switch.DaikinSwitch.async_turn_off(args)
-    # or dis@immigration.go.ke
-    # Appliance.control_mode: 'leavingWaterTemperature'
-    # Appliance.set_preset_mode_status('onOffMode', 'off')
+    """Hot water tank power control"""
     sw = gl_switches.get('Tank')
     if sw:  # DaikinSwitch
         if on:
@@ -121,7 +124,9 @@ async def main_task():
     await async_setup_entry(hass, entry)
     daikin_data = hass.data[DOMAIN]
     await setup_switches(hass)
+    climate = await setup_climate(hass)
     await set_tank_state(True)
+    await set_heating_temp_shift(climate, 5.0)
     print_status(daikin_data)
     return 0
 
